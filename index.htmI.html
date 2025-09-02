@@ -1,0 +1,107 @@
+<!DOCTYPE html><html lang="fa" dir="rtl"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>فروشگاه حرفه‌ای علی</title>
+  <meta name="description" content="فروشگاه تک‌صفحه‌ای حرفه‌ای با سبد خرید، فیلتر، جستجو، کوپن، حمل‌ونقل و پرداخت شبیه‌سازی‌شده. آماده انتشار روی Netlify یا هر هاست استاتیک." />
+  <meta name="author" content="Ali Shoori" />
+  <meta name="copyright" content="Ali Shoori © 2025" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text y='50%' x='50%' dominant-baseline='middle' text-anchor='middle' font-size='48'>🛒</text></svg>">
+  <!--
+    پروژه: فروشگاه حرفه‌ای
+    طراح و مالک: Ali Shoori © 2025
+    هرگونه کپی‌برداری بدون اجازه غیرقانونی است.
+  -->
+  <style>
+    body { font-family: 'Tahoma', sans-serif; margin: 0; padding: 0; background: #f8f8f8; }
+    header { background: #4CAF50; color: white; padding: 1rem 2rem; display: flex; align-items: center; position: sticky; top:0; z-index:100; }
+    .brand { font-size: 1.8rem; font-weight: bold; }
+    .grow { flex-grow: 1; }
+    .btn { background:#4CAF50; color:white; border:none; padding:0.5rem 1rem; border-radius:5px; cursor:pointer; transition:0.3s; }
+    .btn:hover { background:#45a049; }
+    .container { padding: 1rem 2rem; max-width:1200px; margin:auto; }
+    .controls { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem; }
+    .controls input, .controls select { padding:0.5rem; border-radius:5px; border:1px solid #ccc; flex:1; min-width:120px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1rem; }
+    .card { background:white; border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.1); overflow:hidden; transition:0.3s; }
+    .card:hover { transform: translateY(-5px); box-shadow:0 8px 16px rgba(0,0,0,0.2); }
+    .card img { width:100%; height:160px; object-fit:cover; }
+    .card .body { padding:0.5rem 1rem; }
+    .card .price { color:#FF5722; font-weight:bold; margin:0.3rem 0; }
+    .drawer { position:fixed; top:0; right:-400px; width:350px; height:100%; background:white; box-shadow:-4px 0 12px rgba(0,0,0,0.2); transition:0.3s; z-index:200; display:flex; flex-direction:column; }
+    .drawer.open { right:0; }
+    .drawer header { display:flex; justify-content:space-between; align-items:center; padding:1rem; background:#f1f1f1; font-weight:bold; }
+    .drawer .content { padding:1rem; overflow-y:auto; flex-grow:1; }
+    .cart-line { display:flex; align-items:center; margin-bottom:0.5rem; }
+    .cart-line img { width:50px; height:50px; object-fit:cover; border-radius:5px; margin-left:0.5rem; }
+    .cart-line .qty { display:flex; align-items:center; gap:0.3rem; }
+    .cart-line .qty button { padding:0.2rem 0.5rem; }
+    .total { font-weight:bold; font-size:1.1rem; text-align:center; }
+    .btn-ghost { background:transparent; border:none; font-size:1.2rem; cursor:pointer; }
+    footer { text-align:center; padding:1rem; margin-top:2rem; background:#f1f1f1; font-size:0.9rem; color:#555; }
+    @media(max-width:600px){ .controls{flex-direction:column;} .drawer{width:100%;} }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">فروشگاه علی</div>
+  <div class="grow"></div>
+  <button id="cartBtn" class="btn">سبد خرید</button>
+</header>
+<div class="container">
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="جستجو محصول..." />
+    <select id="categoryFilter">
+      <option value="all">همه دسته‌ها</option>
+    </select>
+    <select id="sortFilter">
+      <option value="default">مرتب‌سازی</option>
+      <option value="priceAsc">قیمت صعودی</option>
+      <option value="priceDesc">قیمت نزولی</option>
+    </select>
+  </div>
+  <div class="products grid" id="productGrid"></div>
+</div>
+<div class="drawer" id="cartDrawer">
+  <header>
+    <span>سبد خرید</span>
+    <button id="closeCart" class="btn-ghost">✖</button>
+  </header>
+  <div class="content" id="cartContent"></div>
+  <div class="content total" id="cartTotal"></div>
+  <div class="content">
+    <input type="text" id="couponInput" placeholder="کوپن تخفیف" />
+    <button id="applyCoupon" class="btn">اعمال کوپن</button>
+    <button id="checkoutBtn" class="btn acc">پرداخت</button>
+  </div>
+</div>
+<footer>
+  © 2025 طراحی و توسعه توسط <strong>Ali Shoori</strong> — همه حقوق محفوظ است.
+</footer>
+<script>
+const products = [
+  {id:1,name:'کفش اسپرت',price:120000,img:'https://via.placeholder.com/220x160',category:'کفش'},
+  {id:2,name:'تی‌شرت مردانه',price:80000,img:'https://via.placeholder.com/220x160',category:'لباس'},
+  {id:3,name:'کاپشن زمستانی',price:250000,img:'https://via.placeholder.com/220x160',category:'لباس'},
+  {id:4,name:'ساعت مچی',price:180000,img:'https://via.placeholder.com/220x160',category:'اکسسوری'}
+];
+let cart=[]; let coupon=0; 
+const productGrid = document.getElementById('productGrid'); function renderProducts(list){ productGrid.innerHTML=''; list.forEach(p=>{ const div=document.createElement('div'); div.className='card'; div.innerHTML=<img src='${p.img}' /><div class='body'><h4>${p.name}</h4><div class='price'>${p.price.toLocaleString()} تومان</div><button class='btn addBtn' data-id='${p.id}'>افزودن به سبد</button></div>; productGrid.appendChild(div); }); } renderProducts(products);
+
+const cartDrawer = document.getElementById('cartDrawer'); document.getElementById('cartBtn').onclick=()=>cartDrawer.classList.add('open'); document.getElementById('closeCart').onclick=()=>cartDrawer.classList.remove('open');
+
+function updateCart(){ const cartContent=document.getElementById('cartContent'); const cartTotal=document.getElementById('cartTotal'); cartContent.innerHTML=''; let total=0; cart.forEach(item=>{ total+=item.price*item.qty; const div=document.createElement('div'); div.className='cart-line'; div.innerHTML=<img src='${item.img}'/><div><strong>${item.name}</strong><div class='qty'><button class='minus' data-id='${item.id}'>-</button><span>${item.qty}</span><button class='plus' data-id='${item.id}'>+</button></div></div><div>${(item.price*item.qty).toLocaleString()} تومان</div>; cartContent.appendChild(div); }); total-=coupon; if(total<0) total=0; cartTotal.innerHTML=جمع کل: ${total.toLocaleString()} تومان; document.querySelectorAll('.plus').forEach(b=>b.onclick=()=>{const i=cart.find(it=>it.id==b.dataset.id);i.qty++;updateCart();}); document.querySelectorAll('.minus').forEach(b=>b.onclick=()=>{const i=cart.find(it=>it.id==b.dataset.id);if(i.qty>1){i.qty--;}else{cart=cart.filter(it=>it.id!=i.id);}updateCart();}); }
+
+document.addEventListener('click',e=>{if(e.target.classList.contains('addBtn')){ const prod=products.find(p=>p.id==e.target.dataset.id); const exist=cart.find(c=>c.id==prod.id); if(exist) exist.qty++; else cart.push({...prod,qty:1}); updateCart(); }});
+
+document.getElementById('applyCoupon').onclick=()=>{ const val=document.getElementById('couponInput').value; if(val==='ALI20') coupon=20000; else coupon=0; updateCart(); alert(coupon?کوپن اعمال شد: ${coupon} تومان تخفیف:'کوپن نامعتبر'); };
+
+document.getElementById('checkoutBtn').onclick=()=>{ if(cart.length===0){alert('سبد خرید خالی است!'); return;} alert('پرداخت شبیه‌سازی شد. '+document.getElementById('cartTotal').innerText); cart=[]; coupon=0; document.getElementById('couponInput').value=''; updateCart(); cartDrawer.classList.remove('open'); };
+
+document.getElementById('searchInput').oninput=()=>{ const q=document.getElementById('searchInput').value.toLowerCase(); renderProducts(products.filter(p=>p.name.toLowerCase().includes(q))); };
+
+document.getElementById('categoryFilter').onchange=()=>{ const cat=document.getElementById('categoryFilter').value; renderProducts(cat==='all'?products:products.filter(p=>p.category===cat)); };
+
+document.getElementById('sortFilter').onchange=()=>{ const val=document.getElementById('sortFilter').value; let sorted=[...products]; if(val==='priceAsc') sorted.sort((a,b)=>a.price-b.price); if(val==='priceDesc') sorted.sort((a,b)=>b.price-a.price); renderProducts(sorted); }; </script>
+
+</body>
+</html>
